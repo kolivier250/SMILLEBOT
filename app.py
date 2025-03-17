@@ -2,6 +2,10 @@ import gradio as gr
 import json
 import openai
 import os
+import time
+start = time.time()
+openai.Model.list()
+print(f"API Ping: {time.time() - start:.2f}s")
 
 # Load FAQs
 with open('structured_faqs.json', 'r', encoding='utf-8') as f:
@@ -12,18 +16,24 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def get_answer_from_gpt(question):
-    prompt = "Answer based on these FAQs:\n\n"
-    for category, faqs in faq_data.items():
-        if faqs:
-            prompt += f"{category} FAQs:\n"
-            for faq in faqs:
-                prompt += f"Q: {faq['question']}\nA: {faq['answer']}\n\n"
-    prompt += f"Q: {question}\nA:"
+    # Build a more efficient prompt
+    prompt = """You're a tax expert assistant for Rwanda Revenue Authority (RRA). 
+    Answer concisely using ONLY the following FAQs. If unsure, say "I don't know".
+
+    FAQs:
+    """
+
+    # Add only relevant FAQs (limit to 5 most relevant)
+    for faq in faq_data.get("ELECTRONIC BILLING MACHINE", [])[:5]:  # Example category
+        prompt += f"\nQ: {faq['question']}\nA: {faq['answer']}"
+
+    prompt += f"\n\nQuestion: {question}\nAnswer:"
 
     response = openai.Completion.create(
-        engine="text-davinci-003",
+        engine="gpt-3.5-turbo-instruct",  # Faster model
         prompt=prompt,
-        max_tokens=150
+        max_tokens=150,
+        temperature=0.3  # More focused answers
     )
     return response.choices[0].text.strip()
 
