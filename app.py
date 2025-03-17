@@ -63,5 +63,6 @@ with gr.Blocks(title="FAQ Bot") as demo:
         outputs=search_output
     )
 
-if __name__ == "__main__":
-    demo.launch()
+
+    if __name__ == "__main__":
+        demo.launch(share=True)  # This creates a public URL
